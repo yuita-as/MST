@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Memahami Minimum Spanning Tree: Algoritma Prim & Kruskal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f7f6f2; --card:#ffffff; --ink:#1d2433; --muted:#5b6475; --line:#e3e1da;
+    --accent:#3b4cca; --accept:#14905a; --consider:#2563eb; --cand:#d97706; --reject:#d1343a;
+    --edge:#b9bcc6; --soft:#eef0fb;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Plus Jakarta Sans",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.65;font-size:16.5px}
+  header{background:linear-gradient(135deg,#1e2a78,#3b4cca 60%,#5a6be0);color:#fff;padding:56px 20px 64px}
+  header .wrap{max-width:980px;margin:0 auto}
+  header .tag{display:inline-block;font-size:13px;letter-spacing:.08em;text-transform:uppercase;background:rgba(255,255,255,.15);padding:4px 12px;border-radius:99px;margin-bottom:14px}
+  header h1{font-size:clamp(28px,4.6vw,44px);line-height:1.15;margin:0 0 14px;font-weight:800}
+  header p{max-width:680px;margin:0;opacity:.92;font-size:18px}
+  nav.toc{max-width:980px;margin:-30px auto 0;padding:0 20px}
+  nav.toc .in{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 18px;display:flex;flex-wrap:wrap;gap:8px 18px;box-shadow:0 6px 20px rgba(20,30,80,.07)}
+  nav.toc a{color:var(--accent);text-decoration:none;font-weight:600;font-size:14.5px}
+  nav.toc a:hover{text-decoration:underline}
+  main{max-width:980px;margin:0 auto;padding:10px 20px 80px}
+  section{margin-top:56px}
+  h2{font-size:28px;margin:0 0 6px;font-weight:800}
+  h2 .num{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:10px;background:var(--accent);color:#fff;font-size:18px;margin-right:10px;vertical-align:3px}
+  h3{font-size:19px;margin:26px 0 8px}
+  .lead{color:var(--muted);margin-top:0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:16px 0}
+  .callout{border-left:4px solid var(--accent);background:var(--soft);border-radius:0 12px 12px 0;padding:14px 18px;margin:16px 0}
+  .callout.warn{border-color:var(--cand);background:#fff6e8}
+  .callout.ok{border-color:var(--accept);background:#e9f7f0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media (max-width:760px){.grid2,.grid4{grid-template-columns:1fr 1fr}}
+  @media (max-width:480px){.grid2{grid-template-columns:1fr}}
+  .mini{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+  .mini svg{width:100%;height:auto}
+  .mini .t{font-weight:700;font-size:14.5px}
+  .mini .s{font-size:13px;color:var(--muted)}
+  .mini.good{border-color:var(--accept);box-shadow:0 0 0 2px #14905a22}
+  .mini.bad{border-color:var(--reject)}
+  ol.steps{padding-left:0;list-style:none;counter-reset:s}
+  ol.steps li{counter-increment:s;position:relative;padding-left:44px;margin:12px 0}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+  pre{background:#171c2b;color:#e6e8ef;border-radius:12px;padding:16px 18px;overflow:auto;font-family:"JetBrains Mono",monospace;font-size:13.5px;line-height:1.6;margin:12px 0}
+  pre .c{color:#7f8aa8}
+  pre .k{color:#ff9fb0}
+  code{font-family:"JetBrains Mono",monospace;font-size:.9em;background:#eceaf6;padding:1px 6px;border-radius:5px}
+  table{border-collapse:collapse;width:100%;font-size:15px}
+  th,td{border-bottom:1px solid var(--line);padding:10px 10px;text-align:left;vertical-align:top}
+  th{background:#f1f0ea;font-weight:700}
+  /* simulator */
+  .sim{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:18px 0;box-shadow:0 8px 28px rgba(20,30,80,.06)}
+  .sim .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+  .sim button,.sim select{font:inherit;font-size:14.5px;border:1px solid var(--line);background:#fff;padding:7px 13px;border-radius:9px;cursor:pointer;color:var(--ink);font-weight:600}
+  .sim button:hover{border-color:var(--accent);color:var(--accent)}
+  .sim button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .sim button.primary:hover{background:#2d3db0;color:#fff}
+  .sim button:disabled{opacity:.4;cursor:default}
+  .sim .counter{margin-left:auto;font-size:14px;color:var(--muted);font-weight:600}
+  .sim .body{display:grid;grid-template-columns:1.35fr 1fr;gap:16px}
+  @media (max-width:820px){.sim .body{grid-template-columns:1fr}}
+  .sim svg.g{width:100%;height:auto;background:#fbfbf9;border:1px solid var(--line);border-radius:12px}
+  .sim .msg{background:var(--soft);border-radius:12px;padding:12px 14px;margin-top:12px;min-height:74px;font-size:15.5px}
+  .sim .panel h4{margin:0 0 6px;font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .sim .panel table{font-size:14px}
+  .sim .panel td,.sim .panel th{padding:5px 8px}
+  .sim .total{font-size:15px;margin:10px 0;padding:10px 12px;border:1px dashed var(--line);border-radius:10px}
+  .sim .total b{font-size:22px}
+  .row-accept td{color:var(--accept);font-weight:700}
+  .row-reject td{color:var(--reject);text-decoration:line-through}
+  .row-cur td{background:#e6eeff}
+  .row-cand td{color:var(--cand);font-weight:700}
+  .chip{display:inline-block;padding:2px 9px;border-radius:99px;margin:2px;font-size:13.5px;font-weight:700;border:1.5px solid}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted);margin-top:8px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{display:inline-block;width:22px;height:0;border-top:4px solid}
+  /* svg classes */
+  .e line{stroke:var(--edge);stroke-width:2.5;transition:all .3s}
+  .e text{font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:600;fill:#4a5163}
+  .e rect{fill:#fbfbf9}
+  .e.cand line{stroke:var(--cand);stroke-width:3.5;stroke-dasharray:7 5}
+  .e.cand text{fill:var(--cand)}
+  .e.cur line{stroke:var(--consider);stroke-width:6}
+  .e.cur text{fill:var(--consider);font-size:15px}
+  .e.mst line{stroke:var(--accept);stroke-width:6;stroke-dasharray:none}
+  .e.mst text{fill:var(--accept);font-size:14px}
+  .e.rej line{stroke:var(--reject);stroke-width:3;stroke-dasharray:4 6;opacity:.7}
+  .e.rej text{fill:var(--reject);text-decoration:line-through}
+  .e.skip line{opacity:.25}
+  .e.skip text{opacity:.35}
+  .n circle{fill:#fff;stroke:#4a5163;stroke-width:2.5;transition:all .3s}
+  .n text{font-weight:800;font-size:17px;fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+  .n.in circle{fill:var(--accept);stroke:var(--accept)}
+  .n.in text{fill:#fff}
+  details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:10px 0}
+  details summary{cursor:pointer;font-weight:700}
+  details[open] summary{margin-bottom:8px}
+  footer{max-width:980px;margin:0 auto;padding:0 20px 40px;color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <span class="tag">Materi Struktur Data &amp; Algoritma</span>
+  <h1>Minimum Spanning Tree:<br>Algoritma Prim &amp; Kruskal</h1>
+  <p>Pahami konsepnya lewat analogi sederhana, lalu jalankan kedua algoritma langkah demi langkah pada graf yang sama.</p>
+</div></header>
+
+<nav class="toc"><div class="in">
+  <a href="#konsep">1. Konsep MST</a>
+  <a href="#prim">2. Algoritma Prim</a>
+  <a href="#kruskal">3. Algoritma Kruskal</a>
+  <a href="#banding">4. Perbandingan</a>
+  <a href="#kesalahan">5. Kesalahan umum</a>
+  <a href="#latihan">6. Latihan</a>
+</div></nav>
+
+<main>
+
+<!-- ============ 1. KONSEP ============ -->
+<section id="konsep">
+  <h2><span class="num">1</span>Apa itu Minimum Spanning Tree?</h2>
+  <p class="lead">Mulai dari masalah nyata, baru ke definisi.</p>
+
+  <div class="callout">
+    <b>Analogi:</b> Pemerintah ingin menyambungkan listrik ke 7 desa. Kabel bisa dipasang di beberapa jalur, dan tiap jalur punya biaya berbeda. Semua desa harus tersambung (langsung atau lewat desa lain), dan biaya totalnya harus <b>semurah mungkin</b>. Jalur mana yang dipilih?<br>
+    Jawaban masalah ini adalah <b>Minimum Spanning Tree (MST)</b>.
+  </div>
+
+  <h3>Istilah yang perlu dikuasai</h3>
+  <div class="card">
+    <table>
+      <tr><th style="width:30%">Istilah</th><th>Arti</th></tr>
+      <tr><td><b>Graf berbobot</b></td><td>Kumpulan <i>simpul</i> (vertex, misalnya desa) dan <i>sisi</i> (edge, jalur kabel) yang masing-masing punya angka bobot (biaya, jarak, waktu).</td></tr>
+      <tr><td><b>Tree (pohon)</b></td><td>Graf yang terhubung dan <b>tidak punya siklus</b> (tidak ada jalan memutar yang kembali ke titik awal).</td></tr>
+      <tr><td><b>Spanning tree</b></td><td>Pohon yang dibentuk dari sebagian sisi graf dan <b>mencakup semua simpul</b>.</td></tr>
+      <tr><td><b>Minimum spanning tree</b></td><td>Spanning tree dengan <b>jumlah bobot sisi paling kecil</b> di antara semua spanning tree yang mungkin.</td></tr>
+    </table>
+  </div>
+
+  <div class="callout ok">
+    <b>Tiga sifat penting MST.</b> Kalau graf punya <b>V</b> simpul, maka:
+    <ol style="margin:6px 0 0">
+      <li>MST selalu punya tepat <b>V − 1 sisi</b> (7 simpul berarti 6 sisi).</li>
+      <li>MST <b>tidak boleh punya siklus</b>.</li>
+      <li>MST harus <b>menghubungkan semua simpul</b>.</li>
+    </ol>
+  </div>
+
+  <h3>Contoh visual: mana yang MST?</h3>
+  <p>Graf kecil dengan 4 simpul. Garis tebal adalah sisi yang dipilih.</p>
+  <div class="grid4" id="miniGrid"></div>
+
+  <p>Mencoba semua kemungkinan spanning tree jelas tidak praktis, karena jumlahnya bisa sangat besar. Karena itu dipakai dua algoritma <b>greedy</b> (rakus): di setiap langkah keduanya mengambil pilihan termurah yang aman. Keduanya selalu menghasilkan MST yang benar.</p>
+</section>
+
+<!-- ============ 2. PRIM ============ -->
+<section id="prim">
+  <h2><span class="num">2</span>Algoritma Prim</h2>
+  <p class="lead">Ide utama: <b>"menumbuhkan satu pohon"</b> dari satu simpul awal.</p>
+
+  <div class="callout">
+    <b>Analogi:</b> Bayangkan noda tinta yang menyebar. Mulai dari satu desa, setiap kali kita menyambung ke <b>desa baru terdekat</b> dari wilayah yang sudah tersambung. Pohon terus membesar sampai semua desa masuk.
+  </div>
+
+  <h3>Langkah-langkah</h3>
+  <ol class="steps">
+    <li>Pilih sembarang simpul sebagai titik awal, lalu masukkan ke dalam pohon.</li>
+    <li>Lihat semua <b>sisi kandidat</b>, yaitu sisi yang satu ujungnya <i>di dalam</i> pohon dan ujung lainnya <i>di luar</i> pohon.</li>
+    <li>Pilih sisi kandidat dengan <b>bobot terkecil</b>. Tambahkan sisi itu dan simpul barunya ke pohon.</li>
+    <li>Ulangi langkah 2–3 sampai semua simpul masuk pohon (sudah ada V − 1 sisi).</li>
+  </ol>
+
+  <div class="callout warn"><b>Kunci memahami Prim:</b> Prim tidak perlu memeriksa siklus secara eksplisit. Karena sisi yang dipilih selalu menuju simpul <i>di luar</i> pohon, siklus tidak mungkin terbentuk.</div>
+
+  <h3>Simulasi interaktif</h3>
+  <p>Tekan <b>Berikutnya ▶</b> untuk menjalankan algoritma selangkah demi selangkah. Titik awal bisa diganti untuk melihat bahwa hasil akhirnya tetap sama.</p>
+  <div class="sim" id="simPrim"></div>
+
+  <h3>Pseudocode</h3>
+<pre><span class="k">PRIM</span>(G, s):
+    dalamPohon = {s}
+    MST = []
+    <span class="k">while</span> |dalamPohon| &lt; |V|:
+        <span class="c">// cari sisi termurah yang keluar dari pohon</span>
+        (u, v) = sisi berbobot minimum dengan u ∈ dalamPohon dan v ∉ dalamPohon
+        MST.tambah((u, v))
+        dalamPohon.tambah(v)
+    <span class="k">return</span> MST</pre>
+  <p>Dalam implementasi nyata, sisi kandidat disimpan di <b>priority queue (min-heap)</b> supaya sisi termurah bisa diambil dengan cepat. Kompleksitasnya <code>O(E log V)</code>.</p>
+</section>
+
+<!-- ============ 3. KRUSKAL ============ -->
+<section id="kruskal">
+  <h2><span class="num">3</span>Algoritma Kruskal</h2>
+  <p class="lead">Ide utama: <b>"ambil sisi termurah di mana pun, asal tidak membentuk siklus"</b>.</p>
+
+  <div class="callout">
+    <b>Analogi:</b> Daftar semua jalur kabel diurutkan dari yang termurah. Kontraktor membaca daftar dari atas: kalau jalur itu menyambungkan dua kelompok desa yang <b>belum tersambung</b>, pasang. Kalau kedua desa <b>sudah tersambung</b> lewat jalan lain, lewati karena kabelnya mubazir (membentuk siklus).
+  </div>
+
+  <h3>Langkah-langkah</h3>
+  <ol class="steps">
+    <li>Urutkan <b>semua sisi</b> dari bobot terkecil ke terbesar.</li>
+    <li>Awalnya setiap simpul adalah "pulau" (himpunan) sendiri.</li>
+    <li>Ambil sisi berikutnya dari daftar. Jika kedua ujungnya berada di <b>himpunan berbeda</b>, terima sisi itu dan gabungkan kedua himpunan. Jika di <b>himpunan yang sama</b>, tolak karena akan membentuk siklus.</li>
+    <li>Ulangi sampai MST punya V − 1 sisi.</li>
+  </ol>
+
+  <div class="callout warn"><b>Kunci memahami Kruskal:</b> Selama proses, sisi yang terpilih bisa terpencar menjadi beberapa potongan pohon kecil (disebut <i>forest</i>). Potongan-potongan ini lama-lama bergabung menjadi satu pohon. Untuk mengecek "sudah satu himpunan atau belum" dipakai struktur data <b>Union-Find (Disjoint Set)</b>.</div>
+
+  <h3>Simulasi interaktif</h3>
+  <p>Graf yang dipakai sama dengan simulasi Prim. Perhatikan warna simpul: simpul dengan warna sama berarti sudah berada di satu himpunan.</p>
+  <div class="sim" id="simKruskal"></div>
+
+  <h3>Pseudocode</h3>
+<pre><span class="k">KRUSKAL</span>(G):
+    MST = []
+    <span class="k">for</span> setiap simpul v: MAKE-SET(v)      <span class="c">// tiap simpul jadi himpunan sendiri</span>
+    urutkan semua sisi berdasarkan bobot (naik)
+    <span class="k">for</span> setiap sisi (u, v) dalam urutan:
+        <span class="k">if</span> FIND(u) ≠ FIND(v):             <span class="c">// beda himpunan → aman, tidak ada siklus</span>
+            MST.tambah((u, v))
+            UNION(u, v)
+        <span class="k">if</span> |MST| = |V| − 1: <span class="k">break</span>
+    <span class="k">return</span> MST</pre>
+  <p>Biaya terbesarnya ada pada pengurutan sisi, sehingga kompleksitasnya <code>O(E log E)</code>.</p>
+</section>
+
+<!-- ============ 4. PERBANDINGAN ============ -->
+<section id="banding">
+  <h2><span class="num">4</span>Prim vs Kruskal</h2>
+  <p class="lead">Hasil total bobotnya sama. Yang berbeda adalah cara berpikirnya.</p>
+  <div class="card" style="overflow-x:auto">
+    <table>
+      <tr><th>Aspek</th><th>Prim</th><th>Kruskal</th></tr>
+      <tr><td>Sudut pandang</td><td>Berbasis <b>simpul</b>: menumbuhkan satu pohon</td><td>Berbasis <b>sisi</b>: memilih dari daftar sisi terurut</td></tr>
+      <tr><td>Titik awal</td><td>Perlu simpul awal</td><td>Tidak perlu</td></tr>
+      <tr><td>Bentuk selama proses</td><td>Selalu <b>satu pohon</b> yang terhubung</td><td>Bisa berupa <b>beberapa pohon</b> terpisah (forest)</td></tr>
+      <tr><td>Pencegahan siklus</td><td>Otomatis: hanya memilih sisi ke simpul di luar pohon</td><td>Eksplisit: dicek dengan Union-Find</td></tr>
+      <tr><td>Struktur data utama</td><td>Priority queue (min-heap)</td><td>Pengurutan + Union-Find</td></tr>
+      <tr><td>Kompleksitas</td><td><code>O(E log V)</code></td><td><code>O(E log E)</code></td></tr>
+      <tr><td>Cocok untuk</td><td>Graf <b>padat</b> (banyak sisi)</td><td>Graf <b>jarang</b> (sedikit sisi)</td></tr>
+    </table>
+  </div>
+  <div class="callout ok"><b>Cara mudah mengingat:</b><br>
+    <b>Prim</b> = "Pohon tumbuh dari satu titik" (P untuk Pohon).<br>
+    <b>Kruskal</b> = "Kumpulkan sisi termurah, Kecuali yang membuat siklus" (K untuk Kumpulkan).</div>
+</section>
+
+<!-- ============ 5. KESALAHAN ============ -->
+<section id="kesalahan">
+  <h2><span class="num">5</span>Kesalahan yang sering terjadi</h2>
+  <div class="grid2">
+    <div class="card"><b>❌ Prim: hanya melihat tetangga simpul terakhir.</b><br>Sisi kandidat adalah semua sisi dari <i>seluruh</i> simpul di dalam pohon, bukan hanya dari simpul yang baru ditambahkan.</div>
+    <div class="card"><b>❌ Kruskal: lupa mengecek siklus.</b><br>Sisi termurah berikutnya belum tentu diterima. Selalu periksa apakah kedua ujungnya sudah terhubung.</div>
+    <div class="card"><b>❌ Mengira MST sama dengan jalur terpendek.</b><br>MST meminimalkan <i>total bobot seluruh jaringan</i>. Jarak antara dua simpul tertentu di dalam MST belum tentu yang terpendek (itu urusan algoritma Dijkstra).</div>
+    <div class="card"><b>❌ Berhenti terlalu cepat atau terlambat.</b><br>Ingat patokannya: MST selesai tepat saat jumlah sisinya mencapai <b>V − 1</b>.</div>
+  </div>
+  <div class="callout"><b>Catatan:</b> Jika ada beberapa sisi berbobot sama, MST yang dihasilkan bisa berbeda sisinya, tetapi <b>total bobotnya selalu sama</b>.</div>
+</section>
+
+<!-- ============ 6. LATIHAN ============ -->
+<section id="latihan">
+  <h2><span class="num">6</span>Latihan</h2>
+  <p class="lead">Kerjakan dulu, baru buka jawabannya.</p>
+
+  <div class="card">
+    <b>Latihan A (pakai simulator).</b> Tekan tombol <b>🎲 Acak bobot</b> pada salah satu simulator di atas. Kerjakan Prim dan Kruskal di kertas, lalu cocokkan hasilnya dengan simulator.
+  </div>
+
+  <details><summary>Soal 1. Graf dengan 10 simpul. Berapa jumlah sisi pada MST-nya?</summary>
+    <b>9 sisi</b>, karena MST selalu punya V − 1 sisi.</details>
+
+  <details><summary>Soal 2. Pada graf contoh di atas (bobot awal), sisi B–C (8) tidak masuk MST. Menurut Kruskal, kenapa sisi itu ditolak?</summary>
+    Saat B–C diperiksa, sisi A–D, C–E, D–F, A–B, dan B–E sudah diterima. Akibatnya B dan C sudah terhubung lewat jalur B–E–C, sehingga keduanya berada di himpunan yang sama. Menambahkan B–C akan membentuk siklus B–C–E–B.</details>
+
+  <details><summary>Soal 3. Mulai Prim dari simpul A (bobot awal). Tuliskan urutan sisi yang ditambahkan.</summary>
+    A–D (5), D–F (6), A–B (7), B–E (7), E–C (5), E–G (9). Total = <b>39</b>.<br>
+    Perhatikan langkah ke-3: setelah pohon berisi {A, D, F}, sisi termurah adalah A–B (7), yang berasal dari simpul A. Simpul A bukan simpul terakhir yang ditambahkan, dan inilah alasan semua simpul di pohon perlu diperiksa.</details>
+
+  <details><summary>Soal 4. Kruskal pada graf yang sama. Tuliskan urutan sisi yang <i>diterima</i>.</summary>
+    A–D (5), C–E (5), D–F (6), A–B (7), B–E (7), E–G (9). Total = <b>39</b>. Hasilnya sama dengan Prim, hanya urutannya yang berbeda.</details>
+
+  <details><summary>Soal 5. Graf punya sangat banyak sisi (hampir setiap pasang simpul terhubung). Algoritma mana yang biasanya lebih efisien?</summary>
+    <b>Prim</b> (terutama dengan heap, atau versi matriks <code>O(V²)</code>), karena Kruskal harus mengurutkan semua sisi yang jumlahnya mendekati V².</details>
+</section>
+
+</main>
+<footer>Materi pembelajaran Minimum Spanning Tree: algoritma Prim dan Kruskal.</footer>
+
+<script>
+/* ===================== Mini illustrations ===================== */
+(function(){
+  const P={P:[30,30],Q:[150,30],R:[150,120],S:[30,120]};
+  const E=[['P','Q',1],['Q','R',3],['R','S',2],['S','P',4],['P','R',5]];
+  const panels=[
+    {t:'Graf asal',s:'5 sisi, semua bobot',sel:null,cls:''},
+    {t:'Spanning tree ✔',s:'S–P, P–R, Q–R → total 12',sel:['SP','PR','QR'],cls:''},
+    {t:'MST ✔✔',s:'P–Q, R–S, Q–R → total 6 (terkecil)',sel:['PQ','RS','QR'],cls:'good'},
+    {t:'Bukan spanning tree ✘',s:'P–Q–R–P membentuk siklus, S tidak terhubung',sel:['PQ','QR','PR'],cls:'bad'}
+  ];
+  const g=document.getElementById('miniGrid');
+  panels.forEach(p=>{
+    let svg=`<svg viewBox="0 0 180 150">`;
+    E.forEach(([u,v,w])=>{
+      const on=!p.sel||p.sel.includes(u+v);
+      const col=p.sel?(on?(p.cls==='bad'?'#d1343a':'#14905a'):'#d6d8de'):'#8a90a0';
+      const [x1,y1]=P[u],[x2,y2]=P[v];const mx=(x1+x2)/2,my=(y1+y2)/2;
+      svg+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="${p.sel&&on?5:2}" ${p.sel&&!on?'stroke-dasharray="4 4"':''}/>`;
+      svg+=`<rect x="${mx-9}" y="${my-9}" width="18" height="18" rx="4" fill="#fff"/><text x="${mx}" y="${my+4.5}" text-anchor="middle" font-size="12" font-family="JetBrains Mono" font-weight="600" fill="${p.sel&&!on?'#b0b4bf':'#333'}">${w}</text>`;
+    });
+    Object.entries(P).forEach(([n,[x,y]])=>{svg+=`<circle cx="${x}" cy="${y}" r="13" fill="#fff" stroke="#333" stroke-width="2"/><text x="${x}" y="${y+5}" text-anchor="middle" font-weight="800" font-size="14">${n}</text>`;});
+    svg+='</svg>';
+    g.insertAdjacentHTML('beforeend',`<div class="mini ${p.cls}">${svg}<div class="t">${p.t}</div><div class="s">${p.s}</div></div>`);
+  });
+})();
+
+/* ===================== Shared graph ===================== */
+const NODES={A:[70,70],B:[250,45],C:[440,70],D:[120,210],E:[310,180],F:[210,305],G:[440,290]};
+const NAMES=Object.keys(NODES);
+const BASE=[['A','B',7],['A','D',5],['B','C',8],['B','D',9],['B','E',7],['C','E',5],['D','E',15],['D','F',6],['E','F',8],['E','G',9],['F','G',11]];
+let EDGES=[];
+function setWeights(ws){EDGES=BASE.map(([u,v,w],i)=>({id:u+v,u,v,w:ws?ws[i]:w}));}
+setWeights();
+const cmp=(a,b)=>a.w-b.w||a.id.localeCompare(b.id);
+const lbl=e=>`${e.u}–${e.v} (${e.w})`;
+const SETCOL=['#3b4cca','#c2410c','#0f766e','#a21caf','#ca8a04','#0369a1','#be123c'];
+
+/* ===================== Step generators ===================== */
+function primSteps(start){
+  const S=[],vis=new Set([start]),mst=[];let total=0;
+  S.push({vis:new Set(vis),mst:[],cand:[],cur:null,total,
+    msg:`Mulai dari simpul <b>${start}</b>. Simpul ini menjadi pohon pertama (berwarna hijau). Simpul lain masih di luar pohon.`});
+  while(vis.size<NAMES.length){
+    const cand=EDGES.filter(e=>vis.has(e.u)!==vis.has(e.v)).sort(cmp);
+    if(!cand.length)break;
+    const b=cand[0];
+    S.push({vis:new Set(vis),mst:[...mst],cand:cand.map(e=>e.id),cur:b.id,total,
+      msg:`Sisi kandidat (dari pohon {${[...vis].join(', ')}} ke luar pohon): ${cand.map(lbl).join(', ')}.<br>Yang paling murah: <b style="color:var(--consider)">${lbl(b)}</b>.`});
+    const nn=vis.has(b.u)?b.v:b.u;vis.add(nn);mst.push(b.id);total+=b.w;
+    S.push({vis:new Set(vis),mst:[...mst],cand:[],cur:null,total,
+      msg:`Tambahkan <b style="color:var(--accept)">${lbl(b)}</b> ke MST. Simpul <b>${nn}</b> masuk ke pohon. Total bobot sekarang <b>${total}</b>.`});
+  }
+  S.push({vis:new Set(vis),mst:[...mst],cand:[],cur:null,total,done:true,
+    msg:`🎉 <b>Selesai!</b> Semua ${NAMES.length} simpul sudah masuk pohon dengan ${mst.length} sisi (V − 1). Total bobot MST = <b>${total}</b>.`});
+  return S;
+}
+
+function kruskalSteps(){
+  const S=[],sorted=[...EDGES].sort(cmp),par={};NAMES.forEach(n=>par[n]=n);
+  const find=x=>par[x]===x?x:(par[x]=find(par[x]));
+  const groups=()=>{const m={};NAMES.forEach(n=>{const r=find(n);(m[r]=m[r]||[]).push(n);});return Object.values(m);};
+  const setOf=x=>'{'+groups().find(g=>g.includes(x)).join(', ')+'}';
+  const mst=[],rej=[];let total=0;
+  S.push({sorted,mst:[],rej:[],cur:null,idx:-1,groups:groups(),total,
+    msg:`Langkah awal: urutkan semua ${sorted.length} sisi dari bobot terkecil (lihat tabel). Setiap simpul masih menjadi himpunan sendiri.`});
+  for(let i=0;i<sorted.length&&mst.length<NAMES.length-1;i++){
+    const e=sorted[i],ru=find(e.u),rv=find(e.v),su=setOf(e.u),sv=setOf(e.v);
+    if(ru!==rv){
+      par[ru]=rv;mst.push(e.id);total+=e.w;
+      S.push({sorted,mst:[...mst],rej:[...rej],cur:e.id,ok:true,idx:i,groups:groups(),total,
+        msg:`Periksa <b>${lbl(e)}</b>: ${e.u} ada di ${su}, ${e.v} ada di ${sv}. Himpunannya <b>berbeda</b>, jadi tidak ada siklus. ✅ <b style="color:var(--accept)">Terima</b> dan gabungkan menjadi ${setOf(e.u)}. Total = <b>${total}</b>.`});
+    }else{
+      rej.push(e.id);
+      S.push({sorted,mst:[...mst],rej:[...rej],cur:e.id,ok:false,idx:i,groups:groups(),total,
+        msg:`Periksa <b>${lbl(e)}</b>: ${e.u} dan ${e.v} sudah berada di himpunan yang <b>sama</b> ${su}. Menambahkan sisi ini akan membentuk siklus. ❌ <b style="color:var(--reject)">Tolak</b>.`});
+    }
+  }
+  const last=S[S.length-1].idx;
+  S.push({sorted,mst:[...mst],rej:[...rej],cur:null,idx:last,groups:groups(),total,done:true,
+    msg:`🎉 <b>Selesai!</b> MST sudah punya ${mst.length} sisi (V − 1) dan semua simpul berada di satu himpunan. ${last<sorted.length-1?`Sisa ${sorted.length-1-last} sisi tidak perlu diperiksa lagi. `:''}Total bobot MST = <b>${total}</b>.`});
+  return S;
+}
+
+/* ===================== Simulator ===================== */
+function makeSim(id,mode){
+  const root=document.getElementById(id);
+  let steps=[],k=0,timer=null,start='A';
+  root.innerHTML=`
+    <div class="toolbar">
+      <button data-a="reset">⟲ Ulang</button>
+      <button data-a="prev">◀ Sebelumnya</button>
+      <button data-a="next" class="primary">Berikutnya ▶</button>
+      <button data-a="play">⏵ Putar otomatis</button>
+      ${mode==='prim'?`<label style="font-size:14px;font-weight:600">Titik awal <select data-a="start">${NAMES.map(n=>`<option>${n}</option>`).join('')}</select></label>`:''}
+      <button data-a="rand">🎲 Acak bobot</button>
+      <button data-a="orig">Bobot awal</button>
+      <span class="counter"></span>
+    </div>
+    <div class="body">
+      <div>
+        <svg class="g" viewBox="0 0 510 350"></svg>
+        <div class="legend">
+          ${mode==='prim'?'<span><i style="border-color:var(--cand);border-top-style:dashed"></i>kandidat</span>':''}
+          <span><i style="border-color:var(--consider)"></i>sedang dipilih/diperiksa</span>
+          <span><i style="border-color:var(--accept)"></i>masuk MST</span>
+          ${mode==='kruskal'?'<span><i style="border-color:var(--reject);border-top-style:dashed"></i>ditolak (siklus)</span>':'<span><i style="border-color:#dfe1e6"></i>tidak dipakai lagi</span>'}
+        </div>
+        <div class="msg"></div>
+      </div>
+      <div class="panel"></div>
+    </div>`;
+  const svg=root.querySelector('svg'),msg=root.querySelector('.msg'),panel=root.querySelector('.panel'),counter=root.querySelector('.counter');
+  const btn=a=>root.querySelector(`[data-a="${a}"]`);
+
+  function drawGraph(){
+    let s='';
+    EDGES.forEach(e=>{
+      const [x1,y1]=NODES[e.u],[x2,y2]=NODES[e.v],mx=(x1+x2)/2,my=(y1+y2)/2;
+      s+=`<g class="e" data-id="${e.id}"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/><rect x="${mx-13}" y="${my-11}" width="26" height="22" rx="6"/><text x="${mx}" y="${my+5}" text-anchor="middle">${e.w}</text></g>`;
+    });
+    NAMES.forEach(n=>{const [x,y]=NODES[n];s+=`<g class="n" data-n="${n}"><circle cx="${x}" cy="${y}" r="21"/><text x="${x}" y="${y}">${n}</text></g>`;});
+    svg.innerHTML=s;
+  }
+  function build(){
+    stop();drawGraph();
+    steps=mode==='prim'?primSteps(start):kruskalSteps();k=0;render();
+  }
+  function render(){
+    const st=steps[k];
+    svg.querySelectorAll('.e').forEach(g=>{
+      const id=g.dataset.id,e=EDGES.find(x=>x.id===id);g.setAttribute('class','e');
+      if(st.mst.includes(id))g.classList.add('mst');
+      if(st.cur===id&&!(mode==='kruskal'&&st.ok))g.classList.add('cur');
+      if(mode==='prim'){
+        if(st.cand.includes(id)&&st.cur!==id)g.classList.add('cand');
+        if(!st.mst.includes(id)&&st.vis.has(e.u)&&st.vis.has(e.v))g.classList.add('skip');
+      }else{
+        if(st.rej.includes(id))g.classList.add('rej');
+        if(st.cur===id&&!st.ok){g.classList.remove('rej');g.classList.add('cur');}
+      }
+    });
+    svg.querySelectorAll('.n').forEach(g=>{
+      const n=g.dataset.n,c=g.querySelector('circle'),t=g.querySelector('text');
+      g.setAttribute('class','n');c.removeAttribute('style');t.removeAttribute('style');
+      if(mode==='prim'){if(st.vis.has(n))g.classList.add('in');}
+      else{
+        const multi=st.groups.filter(x=>x.length>1);const gi=multi.findIndex(x=>x.includes(n));
+        if(gi>=0){c.style.fill=SETCOL[gi%SETCOL.length];c.style.stroke=SETCOL[gi%SETCOL.length];t.style.fill='#fff';}
+      }
+    });
+    msg.innerHTML=st.msg;
+    counter.textContent=`Langkah ${k+1} / ${steps.length}`;
+    btn('prev').disabled=k===0;btn('next').disabled=k===steps.length-1;
+    panel.innerHTML=mode==='prim'?primPanel(st):kruskalPanel(st);
+  }
+  function primPanel(st){
+    const out=NAMES.filter(n=>!st.vis.has(n));
+    const cand=st.cand.map(id=>EDGES.find(e=>e.id===id));
+    return `<h4>Di dalam pohon</h4><div>${[...st.vis].map(n=>`<span class="chip" style="color:#fff;background:var(--accept);border-color:var(--accept)">${n}</span>`).join('')}</div>
+      <h4 style="margin-top:12px">Di luar pohon</h4><div>${out.length?out.map(n=>`<span class="chip" style="color:var(--muted);border-color:var(--line)">${n}</span>`).join(''):'<i style="color:var(--muted)">kosong</i>'}</div>
+      <h4 style="margin-top:12px">Sisi kandidat (terurut)</h4>
+      ${cand.length?`<table><tr><th>Sisi</th><th>Bobot</th></tr>${cand.map((e,i)=>`<tr class="${i===0?'row-cur':'row-cand'}"><td>${e.u}–${e.v}${i===0?' ← terkecil':''}</td><td>${e.w}</td></tr>`).join('')}</table>`:'<i style="color:var(--muted);font-size:14px">Tekan "Berikutnya" untuk melihat kandidat.</i>'}
+      <h4 style="margin-top:12px">Sisi MST</h4><div>${st.mst.length?st.mst.map(id=>{const e=EDGES.find(x=>x.id===id);return `<span class="chip" style="color:var(--accept);border-color:var(--accept)">${lbl(e)}</span>`}).join(''):'<i style="color:var(--muted);font-size:14px">belum ada</i>'}</div>
+      <div class="total">Total bobot: <b>${st.total}</b> &nbsp;·&nbsp; ${st.mst.length}/${NAMES.length-1} sisi</div>`;
+  }
+  function kruskalPanel(st){
+    const rows=st.sorted.map((e,i)=>{
+      let cls='',status='';
+      if(st.mst.includes(e.id)){cls='row-accept';status='✅ diterima';}
+      else if(st.rej.includes(e.id)){cls='row-reject';status='❌ siklus';}
+      else if(i>st.idx){status=st.done?'— tidak perlu':'menunggu';}
+      if(st.cur===e.id)cls+=' row-cur';
+      return `<tr class="${cls}"><td>${i+1}</td><td>${e.u}–${e.v}</td><td>${e.w}</td><td style="text-decoration:none">${status}</td></tr>`;
+    }).join('');
+    const multi=st.groups.filter(x=>x.length>1);
+    const chips=st.groups.map(g=>{const gi=multi.indexOf(g);const col=gi>=0?SETCOL[gi%SETCOL.length]:'#9aa0ad';return `<span class="chip" style="color:${col};border-color:${col}">{${g.join(', ')}}</span>`;}).join('');
+    return `<h4>Daftar sisi terurut</h4><table><tr><th>#</th><th>Sisi</th><th>Bobot</th><th>Status</th></tr>${rows}</table>
+      <h4 style="margin-top:12px">Himpunan (Union-Find)</h4><div>${chips}</div>
+      <div class="total">Total bobot: <b>${st.total}</b> &nbsp;·&nbsp; ${st.mst.length}/${NAMES.length-1} sisi</div>`;
+  }
+  function stop(){if(timer){clearInterval(timer);timer=null;btn('play').textContent='⏵ Putar otomatis';}}
+  root.addEventListener('click',ev=>{
+    const a=ev.target.closest('button')?.dataset.a;if(!a)return;
+    if(a==='next'&&k<steps.length-1){k++;render();}
+    if(a==='prev'&&k>0){stop();k--;render();}
+    if(a==='reset'){stop();k=0;render();}
+    if(a==='play'){
+      if(timer){stop();return;}
+      if(k===steps.length-1)k=0;
+      btn('play').textContent='⏸ Jeda';
+      timer=setInterval(()=>{if(k<steps.length-1){k++;render();}else stop();},1400);
+    }
+    if(a==='rand'){setWeights(BASE.map(()=>1+Math.floor(Math.random()*20)));rebuildAll();}
+    if(a==='orig'){setWeights();rebuildAll();}
+  });
+  root.addEventListener('change',ev=>{if(ev.target.dataset.a==='start'){start=ev.target.value;build();}});
+  build();
+  return {build};
+}
+const sims=[makeSim('simPrim','prim'),makeSim('simKruskal','kruskal')];
+function rebuildAll(){sims.forEach(s=>s.build());}
+</script>
+</body>
+</html>
